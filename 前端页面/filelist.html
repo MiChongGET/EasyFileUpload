@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FileList</title>
+    <link href="layui/css/layui.css" rel="stylesheet"/>
+
+</head>
+<body style="padding: 10px;">
+<div class="demoTable">
+    搜索ID：
+    <div class="layui-inline">
+        <input class="layui-input" name="name" id="demoReload" autocomplete="off">
+    </div>
+    <button class="layui-btn" data-type="reload">搜索</button>
+</div>
+
+<table class="layui-hide" id="LAY_table_file" lay-filter="file"></table>
+
+</body>
+<script src="layui/layui.js" charset="utf-8"></script>
+<script src="js/jquery.js"></script>
+<script>
+    layui.use('table', function () {
+        var table = layui.table;
+
+        //设置全局url，用户自己修改
+        var url = "http://localhost:8080/fileupload/";
+        //方法级渲染
+        table.render({
+            elem: '#LAY_table_file'
+            , url: url + 'myfile/search'
+            , cols: [[
+                {checkbox: true, fixed: true}
+                , {field: 'name', title: '文件名名', width: 200}
+                ,{field: 'size', title: '文件大小', width: 100}
+                , {field: 'md5', title: 'md5值', width: 250, sort: true}
+                , {field: 'url', title: '文件地址', width: 400}
+                , {field: 'createtime', title: '上传时间', sort: true}
+            ]]
+            , id: 'testReload'
+            , page: true
+            , height: 500
+        });
+
+        var $ = layui.$, active = {
+            reload: function () {
+                var demoReload = $('#demoReload');
+
+                //执行重载
+                table.reload('testReload', {
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    }
+                    , where: {
+                        name: demoReload.val()
+                    }
+                });
+            }
+        };
+
+        $('.demoTable .layui-btn').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+    });
+</script>
+</html>

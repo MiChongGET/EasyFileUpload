@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>Easy-File-Upload</title>
+    <link href="layui/css/layui.css" rel="stylesheet"/>
+    <link rel="icon" href="img/logo.png" type="image/x-icon"/>
+    <link rel="shortcut icon" href="img/logo.png" type="image/x-icon"/>
+    <style>
+        .same {
+            margin: 0;
+            box-sizing: border-box;
+            border: 0;
+            height: 49px;
+            padding-top: 1px;
+        }
+
+        .div {
+            width: 600px;
+            height: 54px;
+            border: solid 1px #000000;
+        }
+
+        .text {
+            width: 80%;
+            background-color: white;
+        }
+
+        .btn {
+            width: 20%;
+            background-color: #3588FE;
+        }
+
+    </style>
+</head>
+<body>
+
+<div align="center">
+    <img src="img/esfu_logo.png" style="margin-top: 80px"/>
+
+    <div  style="margin-top: 40px;">
+
+        <div class="same div" style="margin: 0 auto;">
+            <input type="text" class="same text" name="url" placeholder="文件url地址" id="picurl"/><button class="same btn site-active" data-type="seturl" style="font-size: 18px;color: white;cursor: pointer">上 传</button>
+        </div>
+
+        <div class="layui-upload-drag" id="uploadPic" style="width: 540px">
+            <i class="layui-icon"></i>
+            <p>点击上传，或将文件拖拽到此处</p>
+        </div>
+
+    </div>
+</div>
+
+<fieldset class="layui-elem-field site-demo-button" style="width: 1300px;margin: 0 auto;margin-top: 30px;">
+    <legend>高级应用：多文件上传列表</legend>
+    <div class="layui-upload" style="width: 1200px;margin: 0 auto;padding: 5px;">
+        <button type="button" class="layui-btn layui-btn-normal" id="testList">选择多文件</button>
+        <div class="layui-upload-list">
+            <table class="layui-table">
+                <thead>
+                <tr>
+                    <th>文件名</th>
+                    <th>大小</th>
+                    <th>状态</th>
+                    <th>文件地址</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody id="demoList"></tbody>
+            </table>
+        </div>
+        <button type="button" class="layui-btn" id="testListAction">开始上传</button>
+    </div>
+</fieldset>
+<div style=" text-align: center;clear:both;margin-top: 30px;width: 100%">
+    <button class="layui-btn layui-btn-warm layui-btn-radius site-active" id="filelist" data-type="openFileList">文件列表</button>
+</div>
+
+<div id="footer" style="clear:both;text-align:center;margin-top: 200px">
+    <ul>
+        <li>
+            皖ICP备17001060号-3
+        </li>
+        <li>
+            Copyright © 2019 E.S.F.U All Rights Reserved
+        </li>
+    </ul>
+</div>
+</body>
+
+<script src="layui/layui.js" charset="utf-8"></script>
+<script src="js/jquery.js"></script>
+<script>
+    layui.use(['upload', 'layer'], function () {
+        var $ = layui.jquery
+            , upload = layui.upload,
+            layer = layui.layer;
+
+        //设置全局url，用户自己修改
+        var url = "http://localhost:8080/fileupload/";
+
+        //拖拽上传
+        upload.render({
+            elem: '#uploadPic'
+            , url: url+'upload'
+            , accept: 'file'
+            , before: function () {
+                //加载层-默认风格
+                layer.load();
+            }
+            , done: function (res) {
+                console.log(res)
+                if (res.code == 200) {
+                    layer.closeAll('loading');
+                    layer.msg(res.msg);
+                    $("#picurl").val(res.data);
+                }
+                if (res.code == 201){
+                    layer.closeAll('loading');
+                    layer.msg(res.msg);
+                    $("#picurl").val(res.data);
+                }
+                if (res.code == 500){
+                    layer.closeAll('loading');
+                    layer.msg(res.msg);
+                }
+            }
+            , error: function (index, upload) {
+                layer.closeAll('loading'); //关闭loading
+            }
+        });
+
+        //触发事件
+        var active = {
+
+            //获取网络url地址，发送到后台获取网络文件
+            seturl: function(){
+                console.log("发送url："+$("#picurl").val());
+                var fileUrl = $("#picurl").val();
+                if (!fileUrl){
+                    layer.msg("请输入内容");
+                    return ;
+                }
+                //加载层-默认风格
+                layer.load();
+                $.ajax({
+                    type: "POST",
+                    url: url+"uploadByUrl",
+                    data: "fileUrl="+fileUrl,
+                    success:function (res) {
+                        console.log(res);
+                        layer.closeAll('loading');
+                        layer.msg(res.msg);
+                        $("#picurl").val(res.data);
+                    }
+
+                });
+
+            },
+            //打开文件列表
+            openFileList:function () {
+                layer.open({
+                    type: 2,
+                    title: '上传文件列表',
+                    shadeClose: true,
+                    shade: false,
+                    maxmin: true, //开启最大化最小化按钮
+                    area: ['1200px', '600px'],
+                    content: 'filelist.html'
+                });
+            }
+        };
+        $('.site-active').on('click', function(){
+            var othis = $(this), type = othis.data('type');
+            active[type] ? active[type].call(this, othis) : '';
+        });
+
+
+        //多文件列表示例
+        var demoListView = $('#demoList')
+            , uploadListIns = upload.render({
+            elem: '#testList'
+            , url: url+'upload'
+            , accept: 'file'
+            , multiple: true
+            , auto: false
+            , bindAction: '#testListAction'
+            , choose: function (obj) {
+                var files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列
+                //读取本地文件
+                obj.preview(function (index, file, result) {
+                    var tr = $(['<tr id="upload-' + index + '">'
+                        , '<td>' + file.name + '</td>'
+                        , '<td>' + (file.size / 1014).toFixed(1) + 'kb</td>'
+                        , '<td>等待上传</td>'
+                        , '<td></td>'
+                        , '<td>'
+                        , '<button class="layui-btn layui-btn-xs demo-reload layui-hide">重传</button>'
+                        , '<button class="layui-btn layui-btn-xs layui-btn-danger demo-delete">删除</button>'
+                        , '</td>'
+
+                        , '</tr>'].join(''));
+
+                    //单个重传
+                    tr.find('.demo-reload').on('click', function () {
+                        obj.upload(index, file);
+                    });
+
+                    //删除
+                    tr.find('.demo-delete').on('click', function () {
+                        delete files[index]; //删除对应的文件
+                        tr.remove();
+                        uploadListIns.config.elem.next()[0].value = ''; //清空 input file 值，以免删除后出现同名文件不可选
+                    });
+
+                    demoListView.append(tr);
+                });
+            }
+            , done: function (res, index, upload) {
+                if (res.code == 200) { //上传成功
+                    var tr = demoListView.find('tr#upload-' + index)
+                        , tds = tr.children();
+                    tds.eq(2).html('<span style="color: #5FB878;">上传成功</span>');
+                    tds.eq(3).html('<span>' + res.data + '</span>'); //清空操作
+
+                    return delete this.files[index]; //删除文件队列已经上传成功的文件
+                }
+
+                if (res.code == 201) { //秒传成功
+                    var tr = demoListView.find('tr#upload-' + index)
+                        , tds = tr.children();
+                    tds.eq(2).html('<span style="color: #4e77b8;">秒传成功</span>');
+                    tds.eq(3).html('<span>' + res.data + '</span>'); //清空操作
+
+                    return delete this.files[index]; //删除文件队列已经上传成功的文件
+                }
+
+                this.error(index, upload);
+            }
+            , error: function (index, upload) {
+                var tr = demoListView.find('tr#upload-' + index)
+                    , tds = tr.children();
+                tds.eq(2).html('<span style="color: #FF5722;">上传失败</span>');
+                tds.eq(3).find('.demo-reload').removeClass('layui-hide'); //显示重传
+            }
+        });
+
+    });
+
+</script>
+</html>

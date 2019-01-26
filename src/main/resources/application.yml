@@ -1,0 +1,30 @@
+server:
+  port: 8001
+
+spring:
+  #数据库驱动等一些信息
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/qiniuyun?serverTimezone=CTT&useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true
+    username: root
+    password: root
+
+  #spring-data-jpa的配置
+  jpa:
+    database: mysql
+    show-sql: true
+    generate-ddl: true
+
+  #设置文件上传大小限制,-1代表不限制大小
+  servlet:
+    multipart:
+      max-file-size: -1
+      max-request-size: -1
+
+#七牛云配置，自己到七牛云控制台获取
+qiniuyun:
+  config:
+    accesskey: XXXXXXXXXXXXXXXXXX
+    secretkey: XXXXXXXXXXXXXXXXXXXX
+    bucket: 七牛云存储空间名称
+    fileurl: 文件地址前缀（如 http://myfile.buildworld.cn/）
