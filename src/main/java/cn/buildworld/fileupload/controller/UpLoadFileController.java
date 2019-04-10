@@ -65,10 +65,16 @@ public class UpLoadFileController {
                 return new Result(true, StatusCode.FAST_UPLOAD, "秒传成功!", byMd5.getUrl());
             }
 
-            //七牛云文件上传工具包
+            //七牛云文件上传工具包(这个过程存在文件上传需要时间，可能会出现后面有相同的文件重复上传，而此时当前文件还没有上传成功，造成重复文件名称)
             DefaultPutRet myclassmate = upload2QiNiuCloudl.uploadFile(pictureFile.getInputStream(), pictureFile_name);
 
             if (myclassmate != null) {
+
+                //再次查询文件是否已经上传成功
+                byMd5 = myfileService.findByMd5(md5);
+                if (byMd5 != null) {
+                    return new Result(true, StatusCode.FAST_UPLOAD, "秒传成功!", byMd5.getUrl());
+                }
 
                 String picurl = upload2QiNiuCloudl.getFileurl() + myclassmate.key;
 
